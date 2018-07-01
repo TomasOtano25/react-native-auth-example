@@ -3,7 +3,7 @@ import { Alert, Text } from 'react-native';
 import firebase from 'react-native-firebase';
 import { GoogleSignin, GoogleSigninButton } from 'react-native-google-signin'
 
-import { Card, CardSection, Button, Input } from '../common';
+import { Card, CardSection, Button, Input, Spinner } from '../common';
 
 export default class LoginForm extends Component {
   constructor(props) {
@@ -14,20 +14,44 @@ export default class LoginForm extends Component {
   state = {
     email: '',
     password: '',
-    error: ''
+    error: '',
+    loading: false
   };
 
   onButtonPress() {
     const { email, password } = this.state;
 
-    this.setState({ error: '' });
+    this.setState({ error: '', loading: true });
 
-    firebase.auth().signInAndRetrieveDataWithEmailAndPassword(email, password)
-    .catch(() => {
-      firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password)
+    try {
+      firebase.auth().signInAndRetrieveDataWithEmailAndPassword(email, password)
+      .then(this.onLoginSuccess.bind(this))
       .catch(() => {
-        this.setState({ error: 'Authentication Failed.' });
+        firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password)
+        .then(this.onLoginSuccess.bind(this))
+        .catch(() => {
+          this.onLoginFail.bind(this);
+        });
       });
+    } catch (e) {
+      this.onLoginFail.bind(this);
+      console.log(e);
+    }
+  }
+
+  onLoginFail() {
+    this.setState({
+      error: 'Authentication Failed',
+      loading: false
+    });
+  }
+
+  onLoginSuccess() {
+    this.setState({ 
+      email: '',
+      password: '', 
+      error: '', 
+      loading: false
     });
   }
 
@@ -45,6 +69,11 @@ export default class LoginForm extends Component {
     } catch (e) {
       console.log(e);
     }
+  }
+
+  renderButton() {
+    return this.state.loading ? <Spinner size='small' /> : 
+      <Button onPress={this.onButtonPress.bind(this)}> Log In </Button>;
   }
 
   render() {
@@ -80,7 +109,7 @@ export default class LoginForm extends Component {
             </Text>
 
           <CardSection>
-            <Button onPress={this.onButtonPress.bind(this)}> Log In </Button>
+            {this.renderButton()}
           </CardSection>
 
           <CardSection>
