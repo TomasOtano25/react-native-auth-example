@@ -152,7 +152,7 @@ dependencies {
     compile "com.facebook.react:react-native:+"  // From node_modules
 
     implementation (project(":react-native-google-signin")){
-        exclude group: "com.google.android.gms" // very important
+            exclude group: "com.google.android.gms" // very important
     }
     implementation 'com.google.android.gms:play-services-auth:15.0.0'
 }
